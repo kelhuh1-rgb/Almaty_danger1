@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Карта безопасности Алматы — GeoJSON</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
+    header {
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .container { display: flex; height: calc(100vh - 70px); }
+    #map { flex: 1; }
+    .sidebar {
+      width: 320px;
+      background: white;
+      padding: 20px;
+      overflow-y: auto;
+      box-shadow: -3px 0 15px rgba(0,0,0,0.1);
+    }
+    .legend-item { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+    .color-box { width: 30px; height: 30px; border-radius: 6px; border: 1px solid #ddd; }
+    h1 { font-size: 2rem; }
+    .district-info {
+      margin-top: 20px;
+      padding: 18px;
+      background: #f8fafc;
+      border-radius: 10px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🗺️ Карта безопасности районов Алматы</h1>
+  </header>
+
+  <div class="container">
+    <div id="map"></div>
+    
+    <div class="sidebar">
+      <h2>Уровень опасности</h2>
+      <div class="legend">
+        <div class="legend-item"><div class="color-box" style="background:#22c55e"></div><span>1 — Очень безопасно</span></div>
+        <div class="legend-item"><div class="color-box" style="background:#84cc16"></div><span>2 — Безопасно</span></div>
+        <div class="legend-item"><div class="color-box" style="background:#eab308"></div><span>3 — Средний</span></div>
+        <div class="legend-item"><div class="color-box" style="background:#f97316"></div><span>4 — Повышенный</span></div>
+        <div class="legend-item"><div class="color-box" style="background:#ef4444"></div><span>5 — Опасно</span></div>
+      </div>
+
+      <div class="district-info" id="info">
+        <strong>Наведите на район</strong><br><br>
+        Информация появится здесь
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const map = L.map('map').setView([43.25, 76.89], 11.8);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Цвета по уровню опасности
+    const dangerColors = {
+      1: "#22c55e",
+      2: "#84cc16",
+      3: "#eab308",
+      4: "#f97316",
+      5: "#ef4444"
+    };
+
+    // Уровень опасности для каждого района
+    const dangerLevel = {
+      "Турксибский": 5,
+      "Жетысуский": 4,
+      "Алмалинский": 4,
+      "Ауэзовский": 4,
+      "Алатауский": 3,
+      "Наурызбайский": 3,
+      "Медеуский": 2,
+      "Бостандыкский": 2
+    };
+
+    // Загружаем точный GeoJSON
+    fetch('https://raw.githubusercontent.com/akilbekov/almaty.geo.json/master/almaty-districts.geo.json')
+      .then(response => response.json())
+      .then(data => {
+        L.geoJSON(data, {
+          style: feature => {
+            const name = feature.properties.nameRu || feature.properties.name;
+            const danger = dangerLevel[name] || 3;
+            return {
+              color: "#1e3a8a",
+              weight: 2.5,
+              fillColor: dangerColors[danger],
+              fillOpacity: 0.72
+            };
+          },
+          onEachFeature: (feature, layer) => {
+            const name = feature.properties.nameRu || feature.properties.name;
+            const danger = dangerLevel[name] || 3;
+
+            layer.bindTooltip(`<b>${name}</b><br>Опасность: ${danger}/5`, {
+              permanent: false,
+              direction: 'center',
+              className: 'district-tooltip'
+            });
+
+            layer.on('mouseover', function() {
+              this.setStyle({ fillOpacity: 0.9, weight: 4 });
+              document.getElementById('info').innerHTML = `
+                <strong>${name} район</strong><br>
+                Уровень опасности: <b>${danger}/5</b><br><br>
+                ${getDescription(name)}
+              `;
+            });
+
+            layer.on('mouseout', function() {
+              this.setStyle({ fillOpacity: 0.72, weight: 2.5 });
+            });
+          }
+        }).addTo(map);
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Не удалось загрузить GeoJSON. Проверьте интернет.');
+      });
+
+    function getDescription(name) {
+      const desc = {
+        "Медеуский": "Престижный горный район. Один из самых безопасных и зелёных.",
+        "Бостандыкский": "Спокойный, зелёный, хорошая инфраструктура.",
+        "Наурызбайский": "Новый развивающийся район на юго-западе.",
+        "Алатауский": "Удалённый северо-западный район.",
+        "Алмалинский": "Центральный деловой район города.",
+        "Ауэзовский": "Большой жилой район с плотной застройкой.",
+        "Жетысуский": "Старый промышленный район.",
+        "Турксибский": "Один из самых сложных районов по криминогенной обстановке."
+      };
+      return desc[name] || "Район города Алматы.";
+    }
+  </script>
+</body>
+</html>
