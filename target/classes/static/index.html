@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта безопасности Алматы — GeoJSON</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        /* Современный сброс стилей и системные шрифты */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          background: #0f172a;
+          color: #334155;
+          overflow: hidden;
+        }
+
+        /* Премиальная минималистичная шапка */
+        header {
+          background: #1e293b;
+          color: #f8fafc;
+          padding: 1.2rem 2rem;
+          border-bottom: 1px solid #334155;
+          z-index: 1000;
+          position: relative;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        header h1 {
+          font-size: 1.5rem;
+          font-weight: 600;
+          letter-spacing: -0.025em;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        /* Макет интерфейса */
+        .container {
+          display: flex;
+          height: calc(100vh - 65px);
+          position: relative;
+        }
+
+        #map {
+          flex: 1;
+          background: #111827; /* Фон под карту во время загрузки */
+        }
+
+        /* Стильный стеклянный сайдбар */
+        .sidebar {
+          width: 360px;
+          background: #ffffff;
+          padding: 24px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          box-shadow: -5px 0 25px rgba(0,0,0,0.15);
+          z-index: 999;
+        }
+
+        .sidebar h2 {
+          font-size: 1.25rem;
+          color: #0f172a;
+          font-weight: 700;
+        }
+
+        .legend {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        /* Элементы легенды с круглыми индикаторами */
+        .legend-item {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 8px 12px;
+          border-radius: 8px;
+          background: #f8fafc;
+          transition: background 0.2s ease;
+        }
+
+        .legend-item:hover {
+          background: #f1f5f9;
+        }
+
+        .color-box {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%; /* Превращаем квадраты в стильные точки */
+          box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+        }
+
+        .legend-item span {
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: #475569;
+        }
+
+        /* Карточка информации о районе */
+        .district-info {
+          padding: 20px;
+          background: #f1f5f9;
+          border-radius: 12px;
+          line-height: 1.6;
+          border: 1px solid #e2e8f0;
+          font-size: 0.95rem;
+          color: #334155;
+          transition: all 0.3s ease;
+        }
+
+        .district-info.active {
+          background: #f8fafc;
+          border-color: #cbd5e1;
+          box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .district-info h3 {
+          color: #0f172a;
+          font-size: 1.15rem;
+          margin-bottom: 8px;
+        }
+
+        /* Динамический бейдж опасности */
+        .danger-badge {
+          display: inline-block;
+          padding: 4px 10px;
+          border-radius: 20px;
+          font-size: 0.8rem;
+          font-weight: 700;
+          color: white;
+          margin-top: 6px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        /* Кастомизация всплывающих подсказок Leaflet (Tooltip) */
+        .district-tooltip {
+          background: rgba(15, 23, 42, 0.95) !important;
+          border: 1px solid #334155 !important;
+          border-radius: 6px !important;
+          color: #fff !important;
+          font-family: inherit;
+          padding: 6px 10px !important;
+          font-size: 0.85rem !important;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        }
+
+        .district-tooltip::before {
+          border-top-color: rgba(15, 23, 42, 0.95) !important;
+        }
+
+        /* Адаптивность для мобильных устройств */
+        @media (max-width: 768px) {
+          .container { flex-direction: column; height: calc(100vh - 60px); }
+          .sidebar { width: 100%; height: 280px; box-shadow: 0 -5px 25px rgba(0,0,0,0.15); }
+          body { overflow: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🗺️ Карта безопасности районов Алматы</h1>
+</header>
+
+<div class="container">
+    <div id="map"></div>
+
+    <div class="sidebar">
+        <div>
+            <h2>Уровень опасности</h2>
+            <div style="height: 12px;"></div>
+            <div class="legend">
+                <div class="legend-item"><div class="color-box" style="background:#22c55e"></div><span>1 — Очень безопасно</span></div>
+                <div class="legend-item"><div class="color-box" style="background:#84cc16"></div><span>2 — Безопасно</span></div>
+                <div class="legend-item"><div class="color-box" style="background:#eab308"></div><span>3 — Средний уровень</span></div>
+                <div class="legend-item"><div class="color-box" style="background:#f97316"></div><span>4 — Повышенный</span></div>
+                <div class="legend-item"><div class="color-box" style="background:#ef4444"></div><span>5 — Высокая опасность</span></div>
+            </div>
+        </div>
+
+        <div class="district-info" id="info">
+            <span style="color: #94a3b8;">💡 Наведите курсор мыши или нажмите на любой район Алматы, чтобы увидеть подробную аналитику.</span>
+        </div>
+    </div>
+</div>
+
+<script>
+
+const dangerColors = {
+  1: "#22c55e",
+  2: "#84cc16",
+  3: "#eab308",
+  4: "#f97316",
+  5: "#ef4444"
+};
+
+const dangerLabels = {
+  1: "Очень безопасно",
+  2: "Безопасно",
+  3: "Средний уровень",
+  4: "Повышенный риск",
+  5: "Высокая опасность"
+};
+
+let dangerLevel = {};
+let descriptions = {};
+
+fetch('/api/districts')
+  .then(response => response.json())
+  .then(districts => {
+
+    districts.forEach(d => {
+
+      dangerLevel[d.name] = d.dangerLevel;
+      descriptions[d.name] = d.description;
+
+    });
+
+    loadGeoJson();
+
+  });
+
+function getDescription(name) {
+
+  return descriptions[name] ||
+         "Нет описания";
+
+}
+
+function loadGeoJson() {
+
+  const map = L.map('map', {
+    zoomSnap: 0.1
+  }).setView([43.235, 76.885], 11.5);
+
+  L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    {
+      attribution:
+        '&copy; OpenStreetMap contributors &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }
+  ).addTo(map);
+
+  fetch('https://raw.githubusercontent.com/akilbekov/almaty.geo.json/master/almaty-districts.geo.json')
+    .then(response => response.json())
+    .then(data => {
+
+      L.geoJSON(data, {
+
+        style: feature => {
+
+          const geoName =
+            (feature.properties.nameRu ||
+             feature.properties.name ||
+             "").toLowerCase();
+
+          const matchedKey =
+            Object.keys(dangerLevel)
+              .find(key =>
+                geoName.includes(
+                  key.toLowerCase()
+                )
+              );
+
+          const danger =
+            matchedKey
+              ? dangerLevel[matchedKey]
+              : 3;
+
+          return {
+
+            color: "#334155",
+            weight: 1.5,
+            fillColor: dangerColors[danger],
+            fillOpacity: 0.65
+
+          };
+        },
+
+        onEachFeature: (feature, layer) => {
+
+          const geoName =
+            (feature.properties.nameRu ||
+             feature.properties.name ||
+             "").toLowerCase();
+
+          const matchedKey =
+            Object.keys(dangerLevel)
+              .find(key =>
+                geoName.includes(
+                  key.toLowerCase()
+                )
+              );
+
+          const name =
+            matchedKey ||
+            feature.properties.nameRu ||
+            feature.properties.name;
+
+          const danger =
+            matchedKey
+              ? dangerLevel[matchedKey]
+              : 3;
+
+          layer.bindTooltip(
+            `<b>${name} район</b>`,
+            {
+              direction: 'top',
+              className: 'district-tooltip',
+              offset: [0, -10]
+            }
+          );
+
+          layer.on('mouseover', function() {
+
+            this.setStyle({
+              fillOpacity: 0.85,
+              weight: 3,
+              color: "#ffffff"
+            });
+
+            const infoBox =
+              document.getElementById('info');
+
+            infoBox.classList.add('active');
+
+            infoBox.innerHTML = `
+              <h3>${name} район</h3>
+
+              <div class="danger-badge"
+                   style="background:
+                   ${dangerColors[danger]}">
+
+                Уровень:
+                ${danger}/5
+                (${dangerLabels[danger]})
+
+              </div>
+
+              <div style="
+                   margin-top:14px;
+                   color:#475569;
+                   font-size:0.9rem;">
+
+                ${getDescription(name)}
+
+              </div>
+            `;
+          });
+
+          layer.on('mouseout', function() {
+
+            this.setStyle({
+              fillOpacity: 0.65,
+              weight: 1.5,
+              color: "#334155"
+            });
+
+          });
+
+          layer.on('click', function() {
+
+            map.fitBounds(
+              this.getBounds(),
+              { padding: [30, 30] }
+            );
+
+          });
+        }
+
+      }).addTo(map);
+
+    })
+    .catch(err => {
+
+      console.error(err);
+
+      document.getElementById('info')
+        .innerHTML =
+        '<span style="color:#ef4444;">Ошибка загрузки GeoJSON</span>';
+
+    });
+}
+
+
+</script>
+</body>
+</html>
