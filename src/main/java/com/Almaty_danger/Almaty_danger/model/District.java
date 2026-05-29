@@ -36,7 +36,7 @@ public class District {
     @OneToMany(mappedBy = "district", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Incident> incidents = new ArrayList<>();
 
-    // Добавляем вручную (на случай проблем с Lombok)
+
     public List<Incident> getIncidents() {
         return incidents;
     }

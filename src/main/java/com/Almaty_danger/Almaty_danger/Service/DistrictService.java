@@ -3,9 +3,15 @@ package com.Almaty_danger.Almaty_danger.Service;
 import com.Almaty_danger.Almaty_danger.model.District;
 import com.Almaty_danger.Almaty_danger.model.Incident;
 import com.Almaty_danger.Almaty_danger.repository.DistrictRepository;
+import com.Almaty_danger.Almaty_danger.repository.IncidentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import java.util.List;
 
@@ -50,7 +56,7 @@ public class DistrictService {
         return averageDanger * totalIncidents;
     }
 
-    // Вспомогательный класс
+
     public static class DistrictStats {
         public final District district;
         public final double dangerScore;

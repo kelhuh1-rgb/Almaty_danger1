@@ -4,6 +4,7 @@ import com.Almaty_danger.Almaty_danger.model.District;
 import com.Almaty_danger.Almaty_danger.Service.DistrictService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -33,6 +34,8 @@ public class DistrictController {
                 .collect(Collectors.toList());
     }
 
+
+
     private int calculateDangerLevel(District district) {
         if (district.getIncidents() == null || district.getIncidents().isEmpty()) {
             return 2; // безопасно по умолчанию
@@ -46,7 +49,7 @@ public class DistrictController {
         return Math.min(5, Math.max(1, (int) Math.round(avg)));
     }
 
-    // DTO класс
+
     public static class DistrictDto {
         public final String name;
         public final int dangerLevel;

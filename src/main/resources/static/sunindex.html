@@ -9,25 +9,22 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        /* Современный сброс стилей и системные шрифты */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-          background: #0f172a;
-          color: #334155;
+          background: #f8fafc;
+          color: #1e2937;
           overflow: hidden;
         }
 
-        /* Премиальная минималистичная шапка */
         header {
-          background: #1e293b;
-          color: #f8fafc;
+          background: #ffffff;
+          color: #1e2937;
           padding: 1.2rem 2rem;
-          border-bottom: 1px solid #334155;
+          border-bottom: 1px solid #e2e8f0;
           z-index: 1000;
-          position: relative;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
           display: flex;
           justify-content: space-between;
         }
@@ -47,12 +44,11 @@
           height: 50px;
           width: 60px;
           border: none;
-          background-color: #ced5e6;
-          color: #102642;
+          background-color: #434e66;
+          color: #e2e8f0;
           border-radius: 10px;
         }
 
-        /* Макет интерфейса */
         .container {
           display: flex;
           height: calc(100vh - 65px);
@@ -61,10 +57,9 @@
 
         #map {
           flex: 1;
-          background: #111827; /* Фон под карту во время загрузки */
+          background: #f1f5f9;
         }
 
-        /* Стильный стеклянный сайдбар */
         .sidebar {
           width: 360px;
           background: #ffffff;
@@ -73,8 +68,9 @@
           display: flex;
           flex-direction: column;
           gap: 24px;
-          box-shadow: -5px 0 25px rgba(0,0,0,0.15);
+          box-shadow: -5px 0 25px rgba(0,0,0,0.1);
           z-index: 999;
+          border-left: 1px solid #e2e8f0;
         }
 
         .sidebar h2 {
@@ -89,12 +85,11 @@
           gap: 10px;
         }
 
-        /* Элементы легенды с круглыми индикаторами */
         .legend-item {
           display: flex;
           align-items: center;
           gap: 14px;
-          padding: 8px 12px;
+          padding: 10px 12px;
           border-radius: 8px;
           background: #f8fafc;
           transition: background 0.2s ease;
@@ -107,32 +102,30 @@
         .color-box {
           width: 14px;
           height: 14px;
-          border-radius: 50%; /* Превращаем квадраты в стильные точки */
-          box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+          border-radius: 50%;
+          box-shadow: 0 0 0 3px rgba(0,0,0,0.08);
         }
 
         .legend-item span {
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           font-weight: 500;
-          color: #475569;
+          color: #334155;
         }
 
-        /* Карточка информации о районе */
         .district-info {
           padding: 20px;
-          background: #f1f5f9;
+          background: #f8fafc;
           border-radius: 12px;
           line-height: 1.6;
           border: 1px solid #e2e8f0;
           font-size: 0.95rem;
-          color: #334155;
-          transition: all 0.3s ease;
+          color: #1e2937;
         }
 
         .district-info.active {
-          background: #f8fafc;
+          background: #ffffff;
           border-color: #cbd5e1;
-          box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
         .district-info h3 {
@@ -141,7 +134,6 @@
           margin-bottom: 8px;
         }
 
-        /* Динамический бейдж опасности */
         .danger-badge {
           display: inline-block;
           padding: 4px 10px;
@@ -154,26 +146,21 @@
           letter-spacing: 0.05em;
         }
 
-        /* Кастомизация всплывающих подсказок Leaflet (Tooltip) */
+        /* Светлые тултипы */
         .district-tooltip {
-          background: rgba(15, 23, 42, 0.95) !important;
-          border: 1px solid #334155 !important;
+          background: rgba(255, 255, 255, 0.98) !important;
+          border: 1px solid #cbd5e1 !important;
           border-radius: 6px !important;
-          color: #fff !important;
+          color: #1e2937 !important;
           font-family: inherit;
           padding: 6px 10px !important;
-          font-size: 0.85rem !important;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+          font-size: 0.9rem !important;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.12) !important;
         }
 
-        .district-tooltip::before {
-          border-top-color: rgba(15, 23, 42, 0.95) !important;
-        }
-
-        /* Адаптивность для мобильных устройств */
         @media (max-width: 768px) {
           .container { flex-direction: column; height: calc(100vh - 60px); }
-          .sidebar { width: 100%; height: 280px; box-shadow: 0 -5px 25px rgba(0,0,0,0.15); }
+          .sidebar { width: 100%; height: 280px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); }
           body { overflow: auto; }
         }
     </style>
@@ -183,13 +170,13 @@
 <header>
     <h1>🗺️ Карта безопасности районов Алматы</h1>
     <div>
-    <a href="sunindex.html">
-        <button class="changeM"> sun </button>
-    </a>
+        <a href="index.html">
+            <button class="changeM"> moon </button>
+        </a>
 
-    <a href="Analyz.html">
-        <button class="changeM">Statistic</button>
-    </a>
+        <a href="Analyz.html">
+            <button class="changeM">Statistic</button>
+        </a>
     </div>
 
 
@@ -212,13 +199,12 @@
         </div>
 
         <div class="district-info" id="info">
-            <span style="color: #94a3b8;">💡 Наведите курсор мыши или нажмите на любой район Алматы, чтобы увидеть подробную аналитику.</span>
+            <span style="color: #64748b;">💡 Наведите курсор мыши или нажмите на любой район Алматы, чтобы увидеть подробную аналитику.</span>
         </div>
     </div>
 </div>
 
 <script>
-
     const dangerColors = {
       1: "#22c55e",
       2: "#84cc16",
@@ -241,183 +227,87 @@
     fetch('/api/districts')
       .then(response => response.json())
       .then(districts => {
-
         districts.forEach(d => {
-
           dangerLevel[d.name] = d.dangerLevel;
           descriptions[d.name] = d.description;
-
         });
-
         loadGeoJson();
-
       });
 
     function getDescription(name) {
-
-      return descriptions[name] ||
-             "Нет описания";
-
+      return descriptions[name] || "Нет описания";
     }
 
     function loadGeoJson() {
+      const map = L.map('map', { zoomSnap: 0.1 }).setView([43.235, 76.885], 11.5);
 
-      const map = L.map('map', {
-        zoomSnap: 0.1
-      }).setView([43.235, 76.885], 11.5);
-
-      L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-        {
-          attribution:
-            '&copy; OpenStreetMap contributors &copy; CARTO',
-          subdomains: 'abcd',
-          maxZoom: 20
-        }
-      ).addTo(map);
+      // Светлые тайлы
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 20
+      }).addTo(map);
 
       fetch('https://raw.githubusercontent.com/akilbekov/almaty.geo.json/master/almaty-districts.geo.json')
         .then(response => response.json())
         .then(data => {
-
           L.geoJSON(data, {
-
             style: feature => {
-
-              const geoName =
-                (feature.properties.nameRu ||
-                 feature.properties.name ||
-                 "").toLowerCase();
-
-              const matchedKey =
-                Object.keys(dangerLevel)
-                  .find(key =>
-                    geoName.includes(
-                      key.toLowerCase()
-                    )
-                  );
-
-              const danger =
-                matchedKey
-                  ? dangerLevel[matchedKey]
-                  : 3;
+              const geoName = (feature.properties.nameRu || feature.properties.name || "").toLowerCase();
+              const matchedKey = Object.keys(dangerLevel).find(key => geoName.includes(key.toLowerCase()));
+              const danger = matchedKey ? dangerLevel[matchedKey] : 3;
 
               return {
-
-                color: "#334155",
-                weight: 1.5,
+                color: "#94a3b8",
+                weight: 1.8,
                 fillColor: dangerColors[danger],
-                fillOpacity: 0.65
-
+                fillOpacity: 0.7
               };
             },
 
             onEachFeature: (feature, layer) => {
+              const geoName = (feature.properties.nameRu || feature.properties.name || "").toLowerCase();
+              const matchedKey = Object.keys(dangerLevel).find(key => geoName.includes(key.toLowerCase()));
+              const name = matchedKey || feature.properties.nameRu || feature.properties.name;
+              const danger = matchedKey ? dangerLevel[matchedKey] : 3;
 
-              const geoName =
-                (feature.properties.nameRu ||
-                 feature.properties.name ||
-                 "").toLowerCase();
-
-              const matchedKey =
-                Object.keys(dangerLevel)
-                  .find(key =>
-                    geoName.includes(
-                      key.toLowerCase()
-                    )
-                  );
-
-              const name =
-                matchedKey ||
-                feature.properties.nameRu ||
-                feature.properties.name;
-
-              const danger =
-                matchedKey
-                  ? dangerLevel[matchedKey]
-                  : 3;
-
-              layer.bindTooltip(
-                `<b>${name} район</b>`,
-                {
-                  direction: 'top',
-                  className: 'district-tooltip',
-                  offset: [0, -10]
-                }
-              );
+              layer.bindTooltip(`<b>${name} район</b>`, {
+                direction: 'top',
+                className: 'district-tooltip',
+                offset: [0, -10]
+              });
 
               layer.on('mouseover', function() {
+                this.setStyle({ fillOpacity: 0.85, weight: 3, color: "#1e2937" });
 
-                this.setStyle({
-                  fillOpacity: 0.85,
-                  weight: 3,
-                  color: "#ffffff"
-                });
-
-                const infoBox =
-                  document.getElementById('info');
-
+                const infoBox = document.getElementById('info');
                 infoBox.classList.add('active');
-
                 infoBox.innerHTML = `
                   <h3>${name} район</h3>
-
-                  <div class="danger-badge"
-                       style="background:
-                       ${dangerColors[danger]}">
-
-                    Уровень:
-                    ${danger}/5
-                    (${dangerLabels[danger]})
-
+                  <div class="danger-badge" style="background: ${dangerColors[danger]}">
+                    Уровень: ${danger}/5 (${dangerLabels[danger]})
                   </div>
-
-                  <div style="
-                       margin-top:14px;
-                       color:#475569;
-                       font-size:0.9rem;">
-
+                  <div style="margin-top:14px; color:#475569; font-size:0.95rem;">
                     ${getDescription(name)}
-
                   </div>
                 `;
               });
 
               layer.on('mouseout', function() {
-
-                this.setStyle({
-                  fillOpacity: 0.65,
-                  weight: 1.5,
-                  color: "#334155"
-                });
-
+                this.setStyle({ fillOpacity: 0.7, weight: 1.8, color: "#94a3b8" });
               });
 
               layer.on('click', function() {
-
-                map.fitBounds(
-                  this.getBounds(),
-                  { padding: [30, 30] }
-                );
-
+                map.fitBounds(this.getBounds(), { padding: [30, 30] });
               });
             }
-
           }).addTo(map);
-
         })
         .catch(err => {
-
           console.error(err);
-
-          document.getElementById('info')
-            .innerHTML =
+          document.getElementById('info').innerHTML =
             '<span style="color:#ef4444;">Ошибка загрузки GeoJSON</span>';
-
         });
     }
-
-
 </script>
 </body>
 </html>

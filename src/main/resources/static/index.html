@@ -28,6 +28,8 @@
           z-index: 1000;
           position: relative;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+          display: flex;
+          justify-content: space-between;
         }
 
         header h1 {
@@ -37,6 +39,17 @@
           display: flex;
           align-items: center;
           gap: 10px;
+        }
+
+        .changeM{
+          text-align: center;
+          font-size: 15px;
+          height: 50px;
+          width: 60px;
+          border: none;
+          background-color: #ced5e6;
+          color: #102642;
+          border-radius: 10px;
         }
 
         /* Макет интерфейса */
@@ -169,6 +182,17 @@
 
 <header>
     <h1>🗺️ Карта безопасности районов Алматы</h1>
+    <div>
+    <a href="sunindex.html">
+        <button class="changeM"> sun </button>
+    </a>
+
+    <a href="Analyz.html">
+        <button class="changeM">Statistic</button>
+    </a>
+    </div>
+
+
 </header>
 
 <div class="container">
@@ -195,203 +219,203 @@
 
 <script>
 
-const dangerColors = {
-  1: "#22c55e",
-  2: "#84cc16",
-  3: "#eab308",
-  4: "#f97316",
-  5: "#ef4444"
-};
+    const dangerColors = {
+      1: "#22c55e",
+      2: "#84cc16",
+      3: "#eab308",
+      4: "#f97316",
+      5: "#ef4444"
+    };
 
-const dangerLabels = {
-  1: "Очень безопасно",
-  2: "Безопасно",
-  3: "Средний уровень",
-  4: "Повышенный риск",
-  5: "Высокая опасность"
-};
+    const dangerLabels = {
+      1: "Очень безопасно",
+      2: "Безопасно",
+      3: "Средний уровень",
+      4: "Повышенный риск",
+      5: "Высокая опасность"
+    };
 
-let dangerLevel = {};
-let descriptions = {};
+    let dangerLevel = {};
+    let descriptions = {};
 
-fetch('/api/districts')
-  .then(response => response.json())
-  .then(districts => {
+    fetch('/api/districts')
+      .then(response => response.json())
+      .then(districts => {
 
-    districts.forEach(d => {
+        districts.forEach(d => {
 
-      dangerLevel[d.name] = d.dangerLevel;
-      descriptions[d.name] = d.description;
+          dangerLevel[d.name] = d.dangerLevel;
+          descriptions[d.name] = d.description;
 
-    });
+        });
 
-    loadGeoJson();
+        loadGeoJson();
 
-  });
+      });
 
-function getDescription(name) {
+    function getDescription(name) {
 
-  return descriptions[name] ||
-         "Нет описания";
+      return descriptions[name] ||
+             "Нет описания";
 
-}
-
-function loadGeoJson() {
-
-  const map = L.map('map', {
-    zoomSnap: 0.1
-  }).setView([43.235, 76.885], 11.5);
-
-  L.tileLayer(
-    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    {
-      attribution:
-        '&copy; OpenStreetMap contributors &copy; CARTO',
-      subdomains: 'abcd',
-      maxZoom: 20
     }
-  ).addTo(map);
 
-  fetch('https://raw.githubusercontent.com/akilbekov/almaty.geo.json/master/almaty-districts.geo.json')
-    .then(response => response.json())
-    .then(data => {
+    function loadGeoJson() {
 
-      L.geoJSON(data, {
+      const map = L.map('map', {
+        zoomSnap: 0.1
+      }).setView([43.235, 76.885], 11.5);
 
-        style: feature => {
-
-          const geoName =
-            (feature.properties.nameRu ||
-             feature.properties.name ||
-             "").toLowerCase();
-
-          const matchedKey =
-            Object.keys(dangerLevel)
-              .find(key =>
-                geoName.includes(
-                  key.toLowerCase()
-                )
-              );
-
-          const danger =
-            matchedKey
-              ? dangerLevel[matchedKey]
-              : 3;
-
-          return {
-
-            color: "#334155",
-            weight: 1.5,
-            fillColor: dangerColors[danger],
-            fillOpacity: 0.65
-
-          };
-        },
-
-        onEachFeature: (feature, layer) => {
-
-          const geoName =
-            (feature.properties.nameRu ||
-             feature.properties.name ||
-             "").toLowerCase();
-
-          const matchedKey =
-            Object.keys(dangerLevel)
-              .find(key =>
-                geoName.includes(
-                  key.toLowerCase()
-                )
-              );
-
-          const name =
-            matchedKey ||
-            feature.properties.nameRu ||
-            feature.properties.name;
-
-          const danger =
-            matchedKey
-              ? dangerLevel[matchedKey]
-              : 3;
-
-          layer.bindTooltip(
-            `<b>${name} район</b>`,
-            {
-              direction: 'top',
-              className: 'district-tooltip',
-              offset: [0, -10]
-            }
-          );
-
-          layer.on('mouseover', function() {
-
-            this.setStyle({
-              fillOpacity: 0.85,
-              weight: 3,
-              color: "#ffffff"
-            });
-
-            const infoBox =
-              document.getElementById('info');
-
-            infoBox.classList.add('active');
-
-            infoBox.innerHTML = `
-              <h3>${name} район</h3>
-
-              <div class="danger-badge"
-                   style="background:
-                   ${dangerColors[danger]}">
-
-                Уровень:
-                ${danger}/5
-                (${dangerLabels[danger]})
-
-              </div>
-
-              <div style="
-                   margin-top:14px;
-                   color:#475569;
-                   font-size:0.9rem;">
-
-                ${getDescription(name)}
-
-              </div>
-            `;
-          });
-
-          layer.on('mouseout', function() {
-
-            this.setStyle({
-              fillOpacity: 0.65,
-              weight: 1.5,
-              color: "#334155"
-            });
-
-          });
-
-          layer.on('click', function() {
-
-            map.fitBounds(
-              this.getBounds(),
-              { padding: [30, 30] }
-            );
-
-          });
+      L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        {
+          attribution:
+            '&copy; OpenStreetMap contributors &copy; CARTO',
+          subdomains: 'abcd',
+          maxZoom: 20
         }
+      ).addTo(map);
 
-      }).addTo(map);
+      fetch('https://raw.githubusercontent.com/akilbekov/almaty.geo.json/master/almaty-districts.geo.json')
+        .then(response => response.json())
+        .then(data => {
 
-    })
-    .catch(err => {
+          L.geoJSON(data, {
 
-      console.error(err);
+            style: feature => {
 
-      document.getElementById('info')
-        .innerHTML =
-        '<span style="color:#ef4444;">Ошибка загрузки GeoJSON</span>';
+              const geoName =
+                (feature.properties.nameRu ||
+                 feature.properties.name ||
+                 "").toLowerCase();
 
-    });
-}
+              const matchedKey =
+                Object.keys(dangerLevel)
+                  .find(key =>
+                    geoName.includes(
+                      key.toLowerCase()
+                    )
+                  );
+
+              const danger =
+                matchedKey
+                  ? dangerLevel[matchedKey]
+                  : 3;
+
+              return {
+
+                color: "#334155",
+                weight: 1.5,
+                fillColor: dangerColors[danger],
+                fillOpacity: 0.65
+
+              };
+            },
+
+            onEachFeature: (feature, layer) => {
+
+              const geoName =
+                (feature.properties.nameRu ||
+                 feature.properties.name ||
+                 "").toLowerCase();
+
+              const matchedKey =
+                Object.keys(dangerLevel)
+                  .find(key =>
+                    geoName.includes(
+                      key.toLowerCase()
+                    )
+                  );
+
+              const name =
+                matchedKey ||
+                feature.properties.nameRu ||
+                feature.properties.name;
+
+              const danger =
+                matchedKey
+                  ? dangerLevel[matchedKey]
+                  : 3;
+
+              layer.bindTooltip(
+                `<b>${name} район</b>`,
+                {
+                  direction: 'top',
+                  className: 'district-tooltip',
+                  offset: [0, -10]
+                }
+              );
+
+              layer.on('mouseover', function() {
+
+                this.setStyle({
+                  fillOpacity: 0.85,
+                  weight: 3,
+                  color: "#ffffff"
+                });
+
+                const infoBox =
+                  document.getElementById('info');
+
+                infoBox.classList.add('active');
+
+                infoBox.innerHTML = `
+                  <h3>${name} район</h3>
+
+                  <div class="danger-badge"
+                       style="background:
+                       ${dangerColors[danger]}">
+
+                    Уровень:
+                    ${danger}/5
+                    (${dangerLabels[danger]})
+
+                  </div>
+
+                  <div style="
+                       margin-top:14px;
+                       color:#475569;
+                       font-size:0.9rem;">
+
+                    ${getDescription(name)}
+
+                  </div>
+                `;
+              });
+
+              layer.on('mouseout', function() {
+
+                this.setStyle({
+                  fillOpacity: 0.65,
+                  weight: 1.5,
+                  color: "#334155"
+                });
+
+              });
+
+              layer.on('click', function() {
+
+                map.fitBounds(
+                  this.getBounds(),
+                  { padding: [30, 30] }
+                );
+
+              });
+            }
+
+          }).addTo(map);
+
+        })
+        .catch(err => {
+
+          console.error(err);
+
+          document.getElementById('info')
+            .innerHTML =
+            '<span style="color:#ef4444;">Ошибка загрузки GeoJSON</span>';
+
+        });
+    }
 
 
 </script>

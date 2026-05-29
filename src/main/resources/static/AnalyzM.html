@@ -1,0 +1,425 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Анализ — Безопасность Алматы</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+          background: #303b47;
+          color: #727981;
+        }
+
+        header {
+          background: #3f4b5a;
+          padding: 1rem 2rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        header h1 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #5f6677;
+        }
+
+        .changeM{
+          height: 50px;
+          width: 50px;
+          border: none;
+          background-color: #fdfcff;
+          color: #5f6677;
+          border-radius: 10px;
+        }
+
+        .nav-button {
+          padding: 8px 16px;
+          background: #3b82f6;
+          color: #3f4b5a;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          text-decoration: none;
+          display: inline-block;
+        }
+
+        .nav-button:hover { background: #2563eb; }
+
+        main {
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 1.5rem;
+        }
+
+        /* Metric cards */
+        .metrics {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 12px;
+          margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+          background: #3f4b5a;
+          border-radius: 8px;
+          padding: 1rem;
+          text-align: center;
+        }
+
+        .metric-card .label {
+          font-size: 13px;
+          color: #e9f2ff;
+          margin-bottom: 4px;
+        }
+
+        .metric-card .value {
+          font-size: 28px;
+          font-weight: 600;
+          color: #ffffff;
+        }
+
+        .metric-card .value.green  { color: #16a34a; }
+        .metric-card .value.yellow { color: #d97706; }
+        .metric-card .value.red    { color: #dc2626; }
+
+        /* Charts row */
+        .charts-row {
+          display: grid;
+          grid-template-columns: 1fr 2fr;
+          gap: 16px;
+          margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 700px) {
+          .charts-row { grid-template-columns: 1fr; }
+        }
+
+        .card {
+          background: #3f4b5a;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 1rem 1.25rem;
+        }
+
+        .card-title {
+          font-size: 14px;
+          font-weight: 500;
+          color: #ffffff;
+          margin-bottom: 12px;
+        }
+
+        /* Pie legend */
+        .pie-legend {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px 12px;
+          margin-bottom: 12px;
+          font-size: 11px;
+          color: #ffffff;
+        }
+
+        .pie-legend span {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .legend-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 2px;
+          display: inline-block;
+        }
+
+        .pie-wrap {
+          position: relative;
+          height: 180px;
+        }
+
+        .bar-wrap {
+          position: relative;
+        }
+
+        /* Table */
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 14px;
+          table-layout: fixed;
+        }
+
+        thead tr {
+          border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+          padding: 8px 12px;
+          color: #ffffff;
+          font-weight: 500;
+          text-align: left;
+        }
+
+        th:nth-child(2),
+        th:nth-child(3) { text-align: center; }
+
+        td {
+          padding: 10px 12px;
+          border-bottom: 1px solid #f1f5f9;
+          color: #ffffff;
+        }
+
+        td:nth-child(2),
+        td:nth-child(3) { text-align: center; }
+
+        .badge {
+          display: inline-block;
+          padding: 3px 10px;
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>📊 Анализ безопасности Алматы</h1>
+
+    <div>
+        <a class="nav-button" href="index.html">← На карту</a>
+        <a href="Analyz.html">
+            <button class="changeM">
+                Sun
+            </button>
+        </a>
+
+    </div>
+
+</header>
+
+<main>
+
+    <!-- Метрики -->
+    <div class="metrics">
+        <div class="metric-card">
+            <div class="label">Всего районов</div>
+            <div class="value" id="totalCount">—</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">Безопасных</div>
+            <div class="value green" id="safeCount">—</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">Средний риск</div>
+            <div class="value yellow" id="midCount">—</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">Опасных</div>
+            <div class="value red" id="dangerCount">—</div>
+        </div>
+    </div>
+
+    <!-- Графики -->
+    <div class="charts-row">
+
+        <!-- Круговая -->
+        <div class="card">
+            <p class="card-title">Распределение</p>
+            <div class="pie-legend">
+                <span><span class="legend-dot" style="background:#22c55e;"></span>Очень безопасно</span>
+                <span><span class="legend-dot" style="background:#84cc16;"></span>Безопасно</span>
+                <span><span class="legend-dot" style="background:#eab308;"></span>Средний</span>
+                <span><span class="legend-dot" style="background:#f97316;"></span>Повышенный</span>
+                <span><span class="legend-dot" style="background:#ef4444;"></span>Высокая опасность</span>
+            </div>
+            <div class="pie-wrap">
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Горизонтальная столбчатая -->
+        <div class="card">
+            <p class="card-title">Уровень опасности по районам</p>
+            <div class="bar-wrap" id="barWrapper">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Таблица -->
+    <div class="card">
+        <p class="card-title">Список районов</p>
+        <table>
+            <thead>
+            <tr>
+                <th style="width:50%;">Район</th>
+                <th style="width:25%;">Уровень</th>
+                <th style="width:25%;">Статус</th>
+            </tr>
+            </thead>
+            <tbody id="districtBody">
+            <tr>
+                <td colspan="3" style="text-align:center; padding:2rem; color:#64748b;">
+                    Загрузка данных...
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+<script>
+    // ─── Данные ────────────────────────────────────────────────────────────────
+    // Замените этот массив на реальные данные или загрузку с API
+    const districts = [
+      { name: "Алмалинский",   dangerLevel: 3 },
+      { name: "Алатауский",    dangerLevel: 2 },
+      { name: "Ауэзовский",    dangerLevel: 4 },
+      { name: "Бостандыкский", dangerLevel: 2 },
+      { name: "Жетысуский",    dangerLevel: 3 },
+      { name: "Медеуский",     dangerLevel: 1 },
+      { name: "Наурызбайский", dangerLevel: 4 },
+      { name: "Турксибский",   dangerLevel: 5 },
+    ];
+
+    // ─── Конфиг статусов ───────────────────────────────────────────────────────
+    const statusConfig = {
+      1: { color: "#16a34a", label: "Очень безопасно" },
+      2: { color: "#22c55e", label: "Безопасно"       },
+      3: { color: "#d97706", label: "Средне"          },
+      4: { color: "#ea580c", label: "Опасно"          },
+      5: { color: "#dc2626", label: "Очень опасно"    },
+    };
+
+    // ─── Экземпляры графиков ───────────────────────────────────────────────────
+    let pieInstance = null;
+    let barInstance = null;
+
+    // ─── Метрики ───────────────────────────────────────────────────────────────
+    function renderMetrics() {
+      document.getElementById("totalCount").textContent  = districts.length;
+      document.getElementById("safeCount").textContent   = districts.filter(d => d.dangerLevel <= 2).length;
+      document.getElementById("midCount").textContent    = districts.filter(d => d.dangerLevel === 3).length;
+      document.getElementById("dangerCount").textContent = districts.filter(d => d.dangerLevel >= 4).length;
+    }
+
+    // ─── Круговая диаграмма ────────────────────────────────────────────────────
+    function renderPie() {
+      const ctx = document.getElementById("pieChart").getContext("2d");
+      if (pieInstance) pieInstance.destroy();
+
+      const counts = [0, 0, 0, 0, 0];
+      districts.forEach(d => {
+        if (d.dangerLevel >= 1 && d.dangerLevel <= 5) counts[d.dangerLevel - 1]++;
+      });
+
+      pieInstance = new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: [
+            "1 — Очень безопасно",
+            "2 — Безопасно",
+            "3 — Средний",
+            "4 — Повышенный",
+            "5 — Высокая опасность",
+          ],
+          datasets: [{
+            data: counts,
+            backgroundColor: ["#22c55e", "#84cc16", "#eab308", "#f97316", "#ef4444"],
+            borderWidth: 1,
+            borderColor: "#fff",
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+        },
+      });
+    }
+
+    // ─── Горизонтальная гистограмма ────────────────────────────────────────────
+    function renderBar() {
+      const wrapper = document.getElementById("barWrapper");
+      wrapper.style.height = Math.max(200, districts.length * 40 + 60) + "px";
+
+      const ctx = document.getElementById("barChart").getContext("2d");
+      if (barInstance) barInstance.destroy();
+
+      barInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: districts.map(d => d.name),
+          datasets: [{
+            label: "Уровень опасности",
+            data: districts.map(d => d.dangerLevel),
+            backgroundColor: districts.map(d =>
+              d.dangerLevel <= 2 ? "#22c55e"
+              : d.dangerLevel === 3 ? "#eab308"
+              : "#ef4444"
+            ),
+            borderRadius: 4,
+            borderSkipped: false,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: "y",
+          scales: {
+            x: {
+              beginAtZero: true,
+              max: 5,
+              ticks: { stepSize: 1 },
+              grid: { color: "rgba(0,0,0,0.06)" },
+            },
+            y: {
+              ticks: { font: { size: 12 }, autoSkip: false },
+            },
+          },
+          plugins: { legend: { display: false } },
+        },
+      });
+    }
+
+    // ─── Таблица ───────────────────────────────────────────────────────────────
+    function renderTable() {
+      const tbody = document.getElementById("districtBody");
+      tbody.innerHTML = "";
+
+      districts.forEach(d => {
+        const cfg = statusConfig[d.dangerLevel] || { color: "#888", label: "—" };
+        const tr  = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${d.name}</td>
+          <td style="font-weight:600; color:${cfg.color};">${d.dangerLevel}</td>
+          <td>
+            <span class="badge"
+              style="background:${cfg.color}22; color:${cfg.color};">
+              ${cfg.label}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ─── Запуск ────────────────────────────────────────────────────────────────
+    renderMetrics();
+    renderPie();
+    renderBar();
+    renderTable();
+</script>
+
+</body>
+</html>

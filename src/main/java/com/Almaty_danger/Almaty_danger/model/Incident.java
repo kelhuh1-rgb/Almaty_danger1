@@ -32,7 +32,7 @@ public class Incident {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // Добавляем вручную (на случай проблем с Lombok)
+
     public Integer getDangerLevel() {
         return dangerLevel;
     }
